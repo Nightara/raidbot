@@ -74,15 +74,14 @@ public class Launcher
       }
       else
       {
-        gorse = new BossRecord("Gorse", w1.getShortName(), "Gorseval the Multifarious", vg.getShortName());
+        gorse = new BossRecord("Gorse", w1.getShortName(),"Gorseval the Multifarious", vg.getShortName());
         dsl.insertInto(RAIDBOT.BOSS)
             .set(gorse)
             .execute();
       }
     }
-    catch(IOException ex)
+    catch(IOException _)
     {
-      ex.printStackTrace();
       System.out.println("Unknown error while loading properties.");
     }
   }
