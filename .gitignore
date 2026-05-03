@@ -1,0 +1,10 @@
+/target/
+/.idea/
+/.mvn/
+
+.DS_Store
+*.iml
+*.sqlite
+
+/properties.xml
+/jooqConfig.xml
