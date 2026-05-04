@@ -7,7 +7,7 @@ package de.nightara.discord.raidbot.model.tables;
 import de.nightara.discord.raidbot.model.Keys;
 import de.nightara.discord.raidbot.model.Raidbot;
 import de.nightara.discord.raidbot.model.tables.Boss.BossPath;
-import de.nightara.discord.raidbot.model.tables.WingSet.WingSetPath;
+import de.nightara.discord.raidbot.model.tables.Run.RunPath;
 import de.nightara.discord.raidbot.model.tables.records.WingRecord;
 
 import java.util.Collection;
@@ -57,9 +57,9 @@ public class Wing extends TableImpl<WingRecord> {
     }
 
     /**
-     * The column <code>raidbot.wing.short_name</code>.
+     * The column <code>raidbot.wing.id</code>.
      */
-    public final TableField<WingRecord, String> SHORT_NAME = createField(DSL.name("short_name"), SQLDataType.VARCHAR(5).nullable(false), this, "");
+    public final TableField<WingRecord, String> ID = createField(DSL.name("id"), SQLDataType.VARCHAR(5).nullable(false), this, "");
 
     /**
      * The column <code>raidbot.wing.name</code>.
@@ -145,22 +145,21 @@ public class Wing extends TableImpl<WingRecord> {
      */
     public BossPath boss() {
         if (_boss == null)
-            _boss = new BossPath(this, null, Keys.BOSS_WING_SHORT_NAME_FK.getInverseKey());
+            _boss = new BossPath(this, null, Keys.BOSS_WING_ID_FK.getInverseKey());
 
         return _boss;
     }
 
-    private transient WingSetPath _wingSet;
+    private transient RunPath _run;
 
     /**
-     * Get the implicit to-many join path to the <code>raidbot.wing_set</code>
-     * table
+     * Get the implicit to-many join path to the <code>raidbot.run</code> table
      */
-    public WingSetPath wingSet() {
-        if (_wingSet == null)
-            _wingSet = new WingSetPath(this, null, Keys.WING_SET_WING_SHORT_NAME_FK.getInverseKey());
+    public RunPath run() {
+        if (_run == null)
+            _run = new RunPath(this, null, Keys.RUN_WING_ID_FK.getInverseKey());
 
-        return _wingSet;
+        return _run;
     }
 
     @Override

@@ -6,12 +6,14 @@ package de.nightara.discord.raidbot.model;
 
 import de.nightara.discord.raidbot.model.tables.Boss;
 import de.nightara.discord.raidbot.model.tables.Role;
+import de.nightara.discord.raidbot.model.tables.Run;
+import de.nightara.discord.raidbot.model.tables.Signup;
 import de.nightara.discord.raidbot.model.tables.Wing;
-import de.nightara.discord.raidbot.model.tables.WingSet;
 import de.nightara.discord.raidbot.model.tables.records.BossRecord;
 import de.nightara.discord.raidbot.model.tables.records.RoleRecord;
+import de.nightara.discord.raidbot.model.tables.records.RunRecord;
+import de.nightara.discord.raidbot.model.tables.records.SignupRecord;
 import de.nightara.discord.raidbot.model.tables.records.WingRecord;
-import de.nightara.discord.raidbot.model.tables.records.WingSetRecord;
 
 import org.jooq.ForeignKey;
 import org.jooq.TableField;
@@ -32,17 +34,20 @@ public class Keys {
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final UniqueKey<BossRecord> KEY_BOSS_PRIMARY = Internal.createUniqueKey(Boss.BOSS, DSL.name("KEY_boss_PRIMARY"), new TableField[] { Boss.BOSS.SHORT_NAME }, true);
+    public static final UniqueKey<BossRecord> KEY_BOSS_PRIMARY = Internal.createUniqueKey(Boss.BOSS, DSL.name("KEY_boss_PRIMARY"), new TableField[] { Boss.BOSS.ID }, true);
     public static final UniqueKey<RoleRecord> KEY_ROLE_PRIMARY = Internal.createUniqueKey(Role.ROLE, DSL.name("KEY_role_PRIMARY"), new TableField[] { Role.ROLE.ID }, true);
-    public static final UniqueKey<WingRecord> KEY_WING_PRIMARY = Internal.createUniqueKey(Wing.WING, DSL.name("KEY_wing_PRIMARY"), new TableField[] { Wing.WING.SHORT_NAME }, true);
-    public static final UniqueKey<WingSetRecord> KEY_WING_SET_PRIMARY = Internal.createUniqueKey(WingSet.WING_SET, DSL.name("KEY_wing_set_PRIMARY"), new TableField[] { WingSet.WING_SET.NAME, WingSet.WING_SET.WING, WingSet.WING_SET.ORDINAL }, true);
+    public static final UniqueKey<RunRecord> KEY_RUN_PRIMARY = Internal.createUniqueKey(Run.RUN, DSL.name("KEY_run_PRIMARY"), new TableField[] { Run.RUN.DATE, Run.RUN.WING }, true);
+    public static final UniqueKey<RunRecord> KEY_RUN_RUN_PK_2 = Internal.createUniqueKey(Run.RUN, DSL.name("KEY_run_run_pk_2"), new TableField[] { Run.RUN.ORDINAL, Run.RUN.DATE }, true);
+    public static final UniqueKey<WingRecord> KEY_WING_PRIMARY = Internal.createUniqueKey(Wing.WING, DSL.name("KEY_wing_PRIMARY"), new TableField[] { Wing.WING.ID }, true);
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final ForeignKey<BossRecord, BossRecord> BOSS_BOSS_SHORT_NAME_FK = Internal.createForeignKey(Boss.BOSS, DSL.name("boss_boss_short_name_fk"), new TableField[] { Boss.BOSS.AFTER }, Keys.KEY_BOSS_PRIMARY, new TableField[] { Boss.BOSS.SHORT_NAME }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
-    public static final ForeignKey<BossRecord, WingRecord> BOSS_WING_SHORT_NAME_FK = Internal.createForeignKey(Boss.BOSS, DSL.name("boss_wing_short_name_fk"), new TableField[] { Boss.BOSS.WING }, Keys.KEY_WING_PRIMARY, new TableField[] { Wing.WING.SHORT_NAME }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
-    public static final ForeignKey<RoleRecord, BossRecord> ROLE_BOSS_SHORT_NAME_FK = Internal.createForeignKey(Role.ROLE, DSL.name("role_boss_short_name_fk"), new TableField[] { Role.ROLE.BOSS }, Keys.KEY_BOSS_PRIMARY, new TableField[] { Boss.BOSS.SHORT_NAME }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
-    public static final ForeignKey<WingSetRecord, WingRecord> WING_SET_WING_SHORT_NAME_FK = Internal.createForeignKey(WingSet.WING_SET, DSL.name("wing_set_wing_short_name_fk"), new TableField[] { WingSet.WING_SET.WING }, Keys.KEY_WING_PRIMARY, new TableField[] { Wing.WING.SHORT_NAME }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<BossRecord, BossRecord> BOSS_BOSS_ID_FK = Internal.createForeignKey(Boss.BOSS, DSL.name("boss_boss_id_fk"), new TableField[] { Boss.BOSS.AFTER }, Keys.KEY_BOSS_PRIMARY, new TableField[] { Boss.BOSS.ID }, true, ForeignKeyRule.SET_NULL, ForeignKeyRule.CASCADE);
+    public static final ForeignKey<BossRecord, WingRecord> BOSS_WING_ID_FK = Internal.createForeignKey(Boss.BOSS, DSL.name("boss_wing_id_fk"), new TableField[] { Boss.BOSS.WING }, Keys.KEY_WING_PRIMARY, new TableField[] { Wing.WING.ID }, true, ForeignKeyRule.SET_NULL, ForeignKeyRule.CASCADE);
+    public static final ForeignKey<RoleRecord, BossRecord> ROLE_BOSS_ID_FK = Internal.createForeignKey(Role.ROLE, DSL.name("role_boss_id_fk"), new TableField[] { Role.ROLE.BOSS }, Keys.KEY_BOSS_PRIMARY, new TableField[] { Boss.BOSS.ID }, true, ForeignKeyRule.CASCADE, ForeignKeyRule.CASCADE);
+    public static final ForeignKey<RunRecord, WingRecord> RUN_WING_ID_FK = Internal.createForeignKey(Run.RUN, DSL.name("run_wing_id_fk"), new TableField[] { Run.RUN.WING }, Keys.KEY_WING_PRIMARY, new TableField[] { Wing.WING.ID }, true, ForeignKeyRule.CASCADE, ForeignKeyRule.CASCADE);
+    public static final ForeignKey<SignupRecord, RoleRecord> SIGNUP_ROLE_ID_FK = Internal.createForeignKey(Signup.SIGNUP, DSL.name("signup_role_id_fk"), new TableField[] { Signup.SIGNUP.ROLE }, Keys.KEY_ROLE_PRIMARY, new TableField[] { Role.ROLE.ID }, true, ForeignKeyRule.CASCADE, ForeignKeyRule.CASCADE);
+    public static final ForeignKey<SignupRecord, RunRecord> SIGNUP_RUN_DATE_FK = Internal.createForeignKey(Signup.SIGNUP, DSL.name("signup_run_date_fk"), new TableField[] { Signup.SIGNUP.DATE }, Keys.KEY_RUN_PRIMARY, new TableField[] { Run.RUN.DATE }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
 }

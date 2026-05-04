@@ -19,44 +19,44 @@ public class BossRecord extends UpdatableRecordImpl<BossRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>raidbot.boss.short_name</code>.
+     * Setter for <code>raidbot.boss.id</code>.
      */
-    public void setShortName(String value) {
+    public void setId(String value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>raidbot.boss.short_name</code>.
+     * Getter for <code>raidbot.boss.id</code>.
      */
-    public String getShortName() {
+    public String getId() {
         return (String) get(0);
-    }
-
-    /**
-     * Setter for <code>raidbot.boss.wing</code>.
-     */
-    public void setWing(String value) {
-        set(1, value);
-    }
-
-    /**
-     * Getter for <code>raidbot.boss.wing</code>.
-     */
-    public String getWing() {
-        return (String) get(1);
     }
 
     /**
      * Setter for <code>raidbot.boss.name</code>.
      */
     public void setName(String value) {
-        set(2, value);
+        set(1, value);
     }
 
     /**
      * Getter for <code>raidbot.boss.name</code>.
      */
     public String getName() {
+        return (String) get(1);
+    }
+
+    /**
+     * Setter for <code>raidbot.boss.wing</code>.
+     */
+    public void setWing(String value) {
+        set(2, value);
+    }
+
+    /**
+     * Getter for <code>raidbot.boss.wing</code>.
+     */
+    public String getWing() {
         return (String) get(2);
     }
 
@@ -97,12 +97,12 @@ public class BossRecord extends UpdatableRecordImpl<BossRecord> {
     /**
      * Create a detached, initialised BossRecord
      */
-    public BossRecord(String shortName, String wing, String name, String after) {
+    public BossRecord(String id, String name, String wing, String after) {
         super(Boss.BOSS);
 
-        setShortName(shortName);
-        setWing(wing);
+        setId(id);
         setName(name);
+        setWing(wing);
         setAfter(after);
         resetTouchedOnNotNull();
     }

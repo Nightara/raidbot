@@ -19,16 +19,16 @@ public class WingRecord extends UpdatableRecordImpl<WingRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>raidbot.wing.short_name</code>.
+     * Setter for <code>raidbot.wing.id</code>.
      */
-    public void setShortName(String value) {
+    public void setId(String value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>raidbot.wing.short_name</code>.
+     * Getter for <code>raidbot.wing.id</code>.
      */
-    public String getShortName() {
+    public String getId() {
         return (String) get(0);
     }
 
@@ -69,10 +69,10 @@ public class WingRecord extends UpdatableRecordImpl<WingRecord> {
     /**
      * Create a detached, initialised WingRecord
      */
-    public WingRecord(String shortName, String name) {
+    public WingRecord(String id, String name) {
         super(Wing.WING);
 
-        setShortName(shortName);
+        setId(id);
         setName(name);
         resetTouchedOnNotNull();
     }

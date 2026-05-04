@@ -6,8 +6,9 @@ package de.nightara.discord.raidbot.model;
 
 import de.nightara.discord.raidbot.model.tables.Boss;
 import de.nightara.discord.raidbot.model.tables.Role;
+import de.nightara.discord.raidbot.model.tables.Run;
+import de.nightara.discord.raidbot.model.tables.Signup;
 import de.nightara.discord.raidbot.model.tables.Wing;
-import de.nightara.discord.raidbot.model.tables.WingSet;
 
 
 /**
@@ -27,12 +28,17 @@ public class Tables {
     public static final Role ROLE = Role.ROLE;
 
     /**
+     * The table <code>raidbot.run</code>.
+     */
+    public static final Run RUN = Run.RUN;
+
+    /**
+     * The table <code>raidbot.signup</code>.
+     */
+    public static final Signup SIGNUP = Signup.SIGNUP;
+
+    /**
      * The table <code>raidbot.wing</code>.
      */
     public static final Wing WING = Wing.WING;
-
-    /**
-     * The table <code>raidbot.wing_set</code>.
-     */
-    public static final WingSet WING_SET = WingSet.WING_SET;
 }

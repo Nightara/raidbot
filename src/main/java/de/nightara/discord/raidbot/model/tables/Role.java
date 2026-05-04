@@ -7,6 +7,7 @@ package de.nightara.discord.raidbot.model.tables;
 import de.nightara.discord.raidbot.model.Keys;
 import de.nightara.discord.raidbot.model.Raidbot;
 import de.nightara.discord.raidbot.model.tables.Boss.BossPath;
+import de.nightara.discord.raidbot.model.tables.Signup.SignupPath;
 import de.nightara.discord.raidbot.model.tables.records.RoleRecord;
 
 import java.util.Arrays;
@@ -153,7 +154,7 @@ public class Role extends TableImpl<RoleRecord> {
 
     @Override
     public List<ForeignKey<RoleRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.ROLE_BOSS_SHORT_NAME_FK);
+        return Arrays.asList(Keys.ROLE_BOSS_ID_FK);
     }
 
     private transient BossPath _boss;
@@ -163,9 +164,22 @@ public class Role extends TableImpl<RoleRecord> {
      */
     public BossPath boss() {
         if (_boss == null)
-            _boss = new BossPath(this, Keys.ROLE_BOSS_SHORT_NAME_FK, null);
+            _boss = new BossPath(this, Keys.ROLE_BOSS_ID_FK, null);
 
         return _boss;
+    }
+
+    private transient SignupPath _signup;
+
+    /**
+     * Get the implicit to-many join path to the <code>raidbot.signup</code>
+     * table
+     */
+    public SignupPath signup() {
+        if (_signup == null)
+            _signup = new SignupPath(this, null, Keys.SIGNUP_ROLE_ID_FK.getInverseKey());
+
+        return _signup;
     }
 
     @Override

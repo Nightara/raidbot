@@ -6,8 +6,9 @@ package de.nightara.discord.raidbot.model;
 
 import de.nightara.discord.raidbot.model.tables.Boss;
 import de.nightara.discord.raidbot.model.tables.Role;
+import de.nightara.discord.raidbot.model.tables.Run;
+import de.nightara.discord.raidbot.model.tables.Signup;
 import de.nightara.discord.raidbot.model.tables.Wing;
-import de.nightara.discord.raidbot.model.tables.WingSet;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,14 +43,19 @@ public class Raidbot extends SchemaImpl {
     public final Role ROLE = Role.ROLE;
 
     /**
+     * The table <code>raidbot.run</code>.
+     */
+    public final Run RUN = Run.RUN;
+
+    /**
+     * The table <code>raidbot.signup</code>.
+     */
+    public final Signup SIGNUP = Signup.SIGNUP;
+
+    /**
      * The table <code>raidbot.wing</code>.
      */
     public final Wing WING = Wing.WING;
-
-    /**
-     * The table <code>raidbot.wing_set</code>.
-     */
-    public final WingSet WING_SET = WingSet.WING_SET;
 
     /**
      * No further instances allowed
@@ -69,8 +75,9 @@ public class Raidbot extends SchemaImpl {
         return Arrays.asList(
             Boss.BOSS,
             Role.ROLE,
-            Wing.WING,
-            WingSet.WING_SET
+            Run.RUN,
+            Signup.SIGNUP,
+            Wing.WING
         );
     }
 }

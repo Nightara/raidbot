@@ -60,19 +60,19 @@ public class Boss extends TableImpl<BossRecord> {
     }
 
     /**
-     * The column <code>raidbot.boss.short_name</code>.
+     * The column <code>raidbot.boss.id</code>.
      */
-    public final TableField<BossRecord, String> SHORT_NAME = createField(DSL.name("short_name"), SQLDataType.VARCHAR(5).nullable(false), this, "");
-
-    /**
-     * The column <code>raidbot.boss.wing</code>.
-     */
-    public final TableField<BossRecord, String> WING = createField(DSL.name("wing"), SQLDataType.VARCHAR(5).nullable(false), this, "");
+    public final TableField<BossRecord, String> ID = createField(DSL.name("id"), SQLDataType.VARCHAR(5).nullable(false), this, "");
 
     /**
      * The column <code>raidbot.boss.name</code>.
      */
     public final TableField<BossRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(50).nullable(false), this, "");
+
+    /**
+     * The column <code>raidbot.boss.wing</code>.
+     */
+    public final TableField<BossRecord, String> WING = createField(DSL.name("wing"), SQLDataType.VARCHAR(5).defaultValue(DSL.field(DSL.raw("NULL"), SQLDataType.VARCHAR)), this, "");
 
     /**
      * The column <code>raidbot.boss.after</code>.
@@ -153,7 +153,7 @@ public class Boss extends TableImpl<BossRecord> {
 
     @Override
     public List<ForeignKey<BossRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.BOSS_BOSS_SHORT_NAME_FK, Keys.BOSS_WING_SHORT_NAME_FK);
+        return Arrays.asList(Keys.BOSS_BOSS_ID_FK, Keys.BOSS_WING_ID_FK);
     }
 
     private transient BossPath _boss;
@@ -163,7 +163,7 @@ public class Boss extends TableImpl<BossRecord> {
      */
     public BossPath boss() {
         if (_boss == null)
-            _boss = new BossPath(this, Keys.BOSS_BOSS_SHORT_NAME_FK, null);
+            _boss = new BossPath(this, Keys.BOSS_BOSS_ID_FK, null);
 
         return _boss;
     }
@@ -175,7 +175,7 @@ public class Boss extends TableImpl<BossRecord> {
      */
     public WingPath wing() {
         if (_wing == null)
-            _wing = new WingPath(this, Keys.BOSS_WING_SHORT_NAME_FK, null);
+            _wing = new WingPath(this, Keys.BOSS_WING_ID_FK, null);
 
         return _wing;
     }
@@ -187,7 +187,7 @@ public class Boss extends TableImpl<BossRecord> {
      */
     public RolePath role() {
         if (_role == null)
-            _role = new RolePath(this, null, Keys.ROLE_BOSS_SHORT_NAME_FK.getInverseKey());
+            _role = new RolePath(this, null, Keys.ROLE_BOSS_ID_FK.getInverseKey());
 
         return _role;
     }
