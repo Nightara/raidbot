@@ -1,27 +1,29 @@
 package de.nightara.discord.raidbot;
 
-import de.nightara.discord.raidbot.model.*;
 import de.nightara.discord.raidbot.model.tables.records.*;
 import discord4j.core.*;
 import discord4j.core.event.domain.lifecycle.*;
 import discord4j.core.object.entity.*;
 import org.jooq.*;
-import org.jooq.Record;
+import org.jooq.exception.*;
 import org.jooq.impl.*;
 import org.jooq.types.*;
 import reactor.core.publisher.*;
 
 import java.io.*;
+import java.io.IOException;
+import java.math.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.atomic.*;
 
 import static de.nightara.discord.raidbot.model.Raidbot.*;
 
 public class Launcher
 {
-  static void main(String[] args)
+  static void main()
   {
     try(InputStream is = Files.newInputStream(Path.of("properties.xml")))
     {
@@ -39,158 +41,20 @@ public class Launcher
       testDSL(dsl);
 
       DiscordClient client = DiscordClient.create(discordToken);
-      client.withGateway(Launcher::testDiscordClient)
+      client.withGateway(Launcher::setUpCommands)
           .block();
     }
     catch(IOException _)
     {
-      System.out.println("Unknown error while loading properties.");
+      System.out.println("Unable to read config file properties.xml.");
+    }
+    catch(DataAccessException _)
+    {
+      System.out.println("Unable to connect to database. Please check the database configuration in properties.xml.");
     }
   }
 
-  private static void testDSL(DSLContext dsl)
-  {
-    WingRecord w1 = dsl.selectFrom(RAIDBOT.WING)
-        .where(RAIDBOT.WING.ID.eq("W1"))
-        .fetchAny();
-    if(w1 == null)
-    {
-      w1 = new WingRecord("W1","Spirit Vale");
-      dsl.insertInto(RAIDBOT.WING)
-          .set(w1)
-          .execute();
-    }
-
-    BossRecord vg = dsl.selectFrom(RAIDBOT.BOSS)
-        .where(RAIDBOT.BOSS.ID.eq("VG"))
-        .fetchAny();
-    if(vg == null)
-    {
-      vg = new BossRecord("VG","Vale Guardian", w1.getId(),null);
-      dsl.insertInto(RAIDBOT.BOSS)
-          .set(vg)
-          .execute();
-    }
-
-    int vgRoles = dsl.fetchCount(
-      dsl.selectFrom(RAIDBOT.ROLE)
-          .where(RAIDBOT.ROLE.BOSS.eq(vg.getId())));
-    if(vgRoles == 0)
-    {
-      dsl.insertInto(RAIDBOT.ROLE)
-          .columns(RAIDBOT.ROLE.BOSS, RAIDBOT.ROLE.NAME)
-          .values(vg.getId(), "Heal")
-          .values(vg.getId(), "Heal")
-          .values(vg.getId(), "Alac")
-          .values(vg.getId(), "Alac")
-          .values(vg.getId(), "Quick")
-          .values(vg.getId(), "Quick")
-          .values(vg.getId(), "Tank")
-          .values(vg.getId(), "Condi")
-          .values(vg.getId(), "Condi")
-          .values(vg.getId(), "Condi")
-          .values(vg.getId(), "Boonstrip")
-          .execute();
-    }
-
-    BossRecord gorse = dsl.selectFrom(RAIDBOT.BOSS)
-        .where(RAIDBOT.BOSS.ID.eq("Gorse"))
-        .fetchAny();
-    if(gorse == null)
-    {
-      gorse = new BossRecord("Gorse","Gorseval the Multifarious", w1.getId(), vg.getId());
-      dsl.insertInto(RAIDBOT.BOSS)
-          .set(gorse)
-          .execute();
-    }
-
-    int gorseRoles = dsl.fetchCount(
-        dsl.selectFrom(RAIDBOT.ROLE)
-            .where(RAIDBOT.ROLE.BOSS.eq(gorse.getId())));
-    if(gorseRoles == 0)
-    {
-      dsl.insertInto(RAIDBOT.ROLE)
-          .columns(RAIDBOT.ROLE.BOSS, RAIDBOT.ROLE.NAME)
-          .values(gorse.getId(), "Heal")
-          .values(gorse.getId(), "Heal")
-          .values(gorse.getId(), "Alac")
-          .values(gorse.getId(), "Alac")
-          .values(gorse.getId(), "Quick")
-          .values(gorse.getId(), "Quick")
-          .values(gorse.getId(), "Tank")
-          .execute();
-    }
-
-    LocalDate now = LocalDate.now();
-    int runs = dsl.fetchCount(
-        dsl.selectFrom(RAIDBOT.RUN)
-            .where(RAIDBOT.RUN.DATE.eq(now)));
-    if(runs == 0)
-    {
-      dsl.insertInto(RAIDBOT.RUN)
-          .set(new RunRecord(now, UInteger.valueOf(0), w1.getId()))
-          .execute();
-    }
-
-    var vgSignups = dsl.select(RAIDBOT.ROLE.ID, RAIDBOT.ROLE.NAME, RAIDBOT.SIGNUP.PLAYER)
-        .from(RAIDBOT.RUN)
-        .join(RAIDBOT.WING).onKey()
-        .join(RAIDBOT.BOSS).onKey()
-        .join(RAIDBOT.ROLE).onKey()
-        .leftJoin(RAIDBOT.SIGNUP).onKey(Keys.SIGNUP_ROLE_ID_FK)
-        .where(RAIDBOT.RUN.DATE.eq(now)
-            .and(RAIDBOT.SIGNUP.DATE.isNull().or(RAIDBOT.SIGNUP.DATE.eq(now)))
-            .and(RAIDBOT.BOSS.ID.eq(vg.getId())))
-        .fetch();
-
-    if(vgSignups.stream().noneMatch(signup -> signup.get(RAIDBOT.SIGNUP.PLAYER) != null))
-    {
-      Random random = new Random();
-      for(Record signup : vgSignups)
-      {
-        if(random.nextBoolean())
-        {
-          dsl.insertInto(RAIDBOT.SIGNUP)
-              .set(new SignupRecord(now, signup.get(RAIDBOT.ROLE.ID), random.nextLong()))
-              .execute();
-        }
-      }
-    }
-
-    System.out.println("Assigned Roles");
-    System.out.println(dsl.select(
-            RAIDBOT.WING.ID.as("wing"),
-            RAIDBOT.BOSS.ID.as("boss"),
-            RAIDBOT.ROLE.NAME.as("role"),
-            RAIDBOT.SIGNUP.PLAYER)
-        .from(RAIDBOT.RUN)
-        .join(RAIDBOT.WING).onKey()
-        .join(RAIDBOT.BOSS).onKey()
-        .join(RAIDBOT.ROLE).onKey()
-        .join(RAIDBOT.SIGNUP).onKey(Keys.SIGNUP_ROLE_ID_FK)
-        .where(RAIDBOT.RUN.DATE.eq(now)
-            .and(RAIDBOT.SIGNUP.DATE.isNull().or(RAIDBOT.SIGNUP.DATE.eq(now))))
-        .orderBy(RAIDBOT.RUN.ORDINAL.asc(), RAIDBOT.BOSS.NAME.asc(), RAIDBOT.ROLE.ID.asc())
-        .fetch());
-
-    System.out.println("Open Roles");
-    System.out.println(dsl.select(
-            RAIDBOT.WING.ID.as("wing"),
-            RAIDBOT.BOSS.ID.as("boss"),
-            RAIDBOT.ROLE.NAME.as("role"),
-            RAIDBOT.SIGNUP.PLAYER)
-        .from(RAIDBOT.RUN)
-        .join(RAIDBOT.WING).onKey()
-        .join(RAIDBOT.BOSS).onKey()
-        .join(RAIDBOT.ROLE).onKey()
-        .leftJoin(RAIDBOT.SIGNUP).onKey(Keys.SIGNUP_ROLE_ID_FK)
-        .where(RAIDBOT.RUN.DATE.eq(now)
-            .and(RAIDBOT.SIGNUP.ROLE.isNull()))
-        .orderBy(RAIDBOT.RUN.ORDINAL.asc(), RAIDBOT.BOSS.NAME.asc(), RAIDBOT.ROLE.ID.asc())
-        .fetch());
-  }
-
-  private static Mono<Void> testDiscordClient(GatewayDiscordClient client)
+  private static Mono<Void> setUpCommands(GatewayDiscordClient client)
   {
     client.on(ReadyEvent.class)
         .next()
@@ -199,5 +63,44 @@ public class Launcher
         .subscribe(System.out::println);
 
     return client.logout();
+  }
+
+  private static void testDSL(DSLContext dsl) throws DataAccessException
+  {
+    Random random = new Random();
+    LocalDate now = LocalDate.now();
+
+    boolean runExists = dsl.selectCount()
+        .from(RAIDBOT.RUN)
+        .where(RAIDBOT.RUN.DATE.eq(now))
+        .fetchOptional()
+        .map(Record1::component1)
+        .map(count -> count > 0)
+        .orElse(false);
+
+    if(!runExists)
+    {
+      Result<WingRecord> wings = dsl.selectFrom(RAIDBOT.WING)
+          .where(DSL.rand().le(BigDecimal.valueOf(0.5)))
+          .orderBy(DSL.rand().asc())
+          .fetch();
+
+      AtomicInteger ordinal = new AtomicInteger(0);
+      dsl.insertInto(RAIDBOT.RUN)
+          .set(wings.map(wing ->
+              new RunRecord(now, UInteger.valueOf(ordinal.getAndIncrement()), wing.getId())))
+          .execute();
+
+      var signups = Util.getSignups(dsl, now, DSL.rand().le(BigDecimal.valueOf(0.2)));
+      dsl.insertInto(RAIDBOT.SIGNUP)
+          .set(signups.map(signup ->
+              new SignupRecord(now, signup.get(RAIDBOT.ROLE.ID.as("roleId")), random.nextLong())))
+          .execute();
+    }
+
+    System.out.println("Assigned Roles");
+    System.out.println(Util.getSignups(dsl, now, RAIDBOT.SIGNUP.PLAYER.isNotNull()));
+    System.out.println("Open Roles");
+    System.out.println(Util.getSignups(dsl, now, RAIDBOT.SIGNUP.PLAYER.isNull()));
   }
 }
