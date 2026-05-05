@@ -10,7 +10,7 @@ raid parties and open up signups other users can sign in to.
 ## Installation
 ### Clone the Repository
 ```bash
-git clone https://github.com/Nightara/raidbot
+git clone https://github.com/Nightara/raidbot.git
 cd raidbot
 ```
 ### Set Up the Database
