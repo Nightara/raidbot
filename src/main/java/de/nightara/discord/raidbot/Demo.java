@@ -31,13 +31,14 @@ public class Demo
       props.loadFromXML(is);
 
       String discordToken   = props.getProperty("discordToken");
+      String dbType  = props.getProperty("dbType","mariadb");
       String dbHost  = props.getProperty("dbHost","localhost");
       String dbPort  = props.getProperty("dbPort","3306");
       String dbName  = props.getProperty("dbName");
       String dbUser  = props.getProperty("dbUser");
       String dbPass  =  props.getProperty("dbPass");
 
-      DSLContext dsl = DSL.using("jdbc:mariadb://" + dbHost + ":" + dbPort + "/" + dbName, dbUser, dbPass);
+      DSLContext dsl = DSL.using("jdbc:" + dbType + "://" + dbHost + ":" + dbPort + "/" + dbName, dbUser, dbPass);
       testDSL(dsl);
 
       DiscordClient client = DiscordClient.create(discordToken);
