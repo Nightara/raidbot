@@ -4,7 +4,6 @@
 package de.nightara.discord.raidbot.model.tables;
 
 
-import de.nightara.discord.raidbot.model.Indexes;
 import de.nightara.discord.raidbot.model.Keys;
 import de.nightara.discord.raidbot.model.Raidbot;
 import de.nightara.discord.raidbot.model.tables.Role.RolePath;
@@ -19,7 +18,6 @@ import java.util.List;
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.Index;
 import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Path;
@@ -141,11 +139,6 @@ public class Signup extends TableImpl<SignupRecord> {
     @Override
     public Schema getSchema() {
         return aliased() ? null : Raidbot.RAIDBOT;
-    }
-
-    @Override
-    public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.SIGNUP_SIGNUP_RUN_DATE_WING_FK);
     }
 
     @Override
