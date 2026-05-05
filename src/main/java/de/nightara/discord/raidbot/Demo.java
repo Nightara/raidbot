@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.*;
 
 import static de.nightara.discord.raidbot.model.Raidbot.*;
 
-public class Launcher
+public class Demo
 {
   static void main()
   {
@@ -41,7 +41,7 @@ public class Launcher
       testDSL(dsl);
 
       DiscordClient client = DiscordClient.create(discordToken);
-      client.withGateway(Launcher::setUpCommands)
+      client.withGateway(Demo::setUpCommands)
           .block();
     }
     catch(IOException _)

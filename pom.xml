@@ -10,7 +10,7 @@
         <jooqVersion>3.21.2</jooqVersion>
         <jooqConfigFile>jooqConfig.xml</jooqConfigFile>
         <lombokVersion>1.18.46</lombokVersion>
-        <mainClass>de.nightara.discord.raidbot.Launcher</mainClass>
+        <mainClass>de.nightara.discord.raidbot.Demo</mainClass>
     </properties>
 
     <build>
