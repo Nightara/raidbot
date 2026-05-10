@@ -6,6 +6,7 @@
 *.iml
 *.sqlite
 *.sublime-project
+*.sublime-workspace
 
 /properties.xml
 /jooqConfig.xml
