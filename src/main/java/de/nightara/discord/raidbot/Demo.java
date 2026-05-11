@@ -1,9 +1,15 @@
 package de.nightara.discord.raidbot;
 
+import com.fasterxml.jackson.databind.*;
 import de.nightara.discord.raidbot.model.tables.records.*;
+import discord4j.common.*;
 import discord4j.core.*;
+import discord4j.core.event.domain.interaction.*;
 import discord4j.core.event.domain.lifecycle.*;
-import discord4j.core.object.entity.*;
+import discord4j.core.object.command.*;
+import discord4j.discordjson.json.*;
+import discord4j.rest.*;
+import discord4j.rest.service.*;
 import org.jooq.*;
 import org.jooq.exception.*;
 import org.jooq.impl.*;
@@ -18,11 +24,14 @@ import java.nio.file.Path;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
+import java.util.stream.*;
 
 import static de.nightara.discord.raidbot.model.Raidbot.*;
 
 public class Demo
 {
+  private static DSLContext database;
+
   static void main()
   {
     try(InputStream is = Files.newInputStream(Path.of("properties.xml")))
@@ -38,11 +47,14 @@ public class Demo
       String dbUser  = props.getProperty("dbUser");
       String dbPass  =  props.getProperty("dbPass");
 
-      DSLContext dsl = DSL.using("jdbc:" + dbType + "://" + dbHost + ":" + dbPort + "/" + dbName, dbUser, dbPass);
-      testDSL(dsl);
+      database = DSL.using("jdbc:" + dbType + "://" + dbHost + ":" + dbPort + "/" + dbName, dbUser, dbPass);
+      testDSL(database);
 
-      DiscordClient client = DiscordClient.create(discordToken);
-      client.withGateway(Demo::setUpCommands)
+      DiscordClient.create(discordToken).login()
+          .doOnNext(client -> registerCommands(client)
+              .thenMany(client.on(ChatInputInteractionEvent.class, Demo::handleCommand))
+                .subscribe())
+          .flatMap(GatewayDiscordClient::onDisconnect)
           .block();
     }
     catch(IOException _)
@@ -53,17 +65,6 @@ public class Demo
     {
       System.out.println("Unable to connect to database. Please check the database configuration in properties.xml.");
     }
-  }
-
-  private static Mono<Void> setUpCommands(GatewayDiscordClient client)
-  {
-    client.on(ReadyEvent.class)
-        .next()
-        .flatMapMany(readyEvent -> readyEvent.getClient().getGuilds())
-        .map(Guild::getName)
-        .subscribe(System.out::println);
-
-    return client.logout();
   }
 
   private static void testDSL(DSLContext dsl) throws DataAccessException
@@ -92,16 +93,84 @@ public class Demo
               new RunRecord(now, UInteger.valueOf(ordinal.getAndIncrement()), wing.getId())))
           .execute();
 
-      var signups = Util.getSignups(dsl, now, DSL.rand().le(BigDecimal.valueOf(0.2)));
+      var signups = SqlUtil.getSignups(dsl, now, DSL.rand().le(BigDecimal.valueOf(0.2)));
       dsl.insertInto(RAIDBOT.SIGNUP)
           .set(signups.map(signup ->
               new SignupRecord(now, signup.get(RAIDBOT.ROLE.ID.as("roleId")), random.nextLong())))
           .execute();
     }
+  }
 
-    System.out.println("Assigned Roles");
-    System.out.println(Util.getSignups(dsl, now, RAIDBOT.SIGNUP.PLAYER.isNotNull()));
-    System.out.println("Open Roles");
-    System.out.println(Util.getSignups(dsl, now, RAIDBOT.SIGNUP.PLAYER.isNull()));
+  private static List<ApplicationCommandRequest> buildCommands()
+  {
+    try
+    {
+      List<ApplicationCommandRequest> commands = new LinkedList<>();
+      ObjectMapper jacksonMapper = JacksonResources.create().getObjectMapper();
+
+      commands.add(jacksonMapper.readValue(getResourceFileAsString("commands/" + "show-raid" + ".json"),
+          ApplicationCommandRequest.class));
+      commands.add(jacksonMapper.readValue(getResourceFileAsString("commands/" + "shutdown" + ".json"),
+          ApplicationCommandRequest.class));
+
+      return commands;
+    }
+    catch(Exception _)
+    {
+      return List.of();
+    }
+  }
+
+  private static Flux<ApplicationCommandData> registerCommands(GatewayDiscordClient client)
+  {
+    RestClient restClient = client.getRestClient();
+    ApplicationService appService = restClient.getApplicationService();
+
+    return client.on(ReadyEvent.class)
+        .next()
+        .flatMap(_ -> restClient.getApplicationId())
+        .flatMapMany(appId -> Flux.fromIterable(buildCommands())
+            .flatMap(command -> appService.createGlobalApplicationCommand(appId, command)));
+  }
+
+  private static Mono<Void> handleCommand(ChatInputInteractionEvent event)
+  {
+    return switch(event.getCommandName())
+    {
+      case "show-raid" -> handleShowRaid(event);
+      case "shutdown" -> handleShutdown(event);
+      default -> event.reply("Unknown command " + event.getCommandName()).withEphemeral(true);
+    };
+  }
+
+  private static Mono<Void> handleShowRaid(ChatInputInteractionEvent event)
+  {
+    return Mono.justOrEmpty(event.getOption("date")
+            .flatMap(ApplicationCommandInteractionOption::getValue))
+        .map(ApplicationCommandInteractionOptionValue::asString)
+        .map(LocalDate::parse)
+        .onErrorComplete()
+        .defaultIfEmpty(LocalDate.now())
+        .map(date -> SqlUtil.getSignups(database, date))
+        .map(Result::toString)
+        .flatMap(event::reply);
+  }
+
+  private static Mono<Void> handleShutdown(ChatInputInteractionEvent event)
+  {
+    return event.reply("Shutting down...")
+        .withEphemeral(true)
+        .then(event.getClient().logout());
+  }
+
+  private static String getResourceFileAsString(String fileName) throws IOException {
+    ClassLoader classLoader = Demo.class.getClassLoader();
+    try (InputStream resourceAsStream = classLoader.getResourceAsStream(fileName)) {
+      if (resourceAsStream == null) return null;
+      try (InputStreamReader inputStreamReader = new InputStreamReader(resourceAsStream);
+           BufferedReader reader = new BufferedReader(inputStreamReader)) {
+        return reader.lines().collect(Collectors.joining(System.lineSeparator()));
+      }
+    }
   }
 }

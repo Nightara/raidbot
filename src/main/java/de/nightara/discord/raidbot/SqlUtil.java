@@ -10,7 +10,7 @@ import java.time.*;
 import static de.nightara.discord.raidbot.model.Raidbot.*;
 
 @NoArgsConstructor(access=AccessLevel.NONE)
-public abstract class Util
+public abstract class SqlUtil
 {
   public static Result<Record6<UInteger, String, String, UInteger, String, Long>> getSignups(DSLContext dsl, LocalDate date)
   {

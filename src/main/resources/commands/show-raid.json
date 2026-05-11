@@ -1,0 +1,12 @@
+{
+  "name": "show-raid",
+  "description": "Shows the setup for a registered raid.",
+  "options": [
+    {
+      "name": "date",
+      "description": "Raid date",
+      "type": 3,
+      "required": false
+    }
+  ]
+}
