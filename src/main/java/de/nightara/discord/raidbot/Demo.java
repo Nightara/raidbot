@@ -7,6 +7,7 @@ import discord4j.core.*;
 import discord4j.core.event.domain.interaction.*;
 import discord4j.core.event.domain.lifecycle.*;
 import discord4j.core.object.command.*;
+import discord4j.core.object.entity.*;
 import discord4j.discordjson.json.*;
 import discord4j.rest.*;
 import discord4j.rest.service.*;
@@ -48,11 +49,10 @@ public class Demo
       String dbPass  =  props.getProperty("dbPass");
 
       database = DSL.using("jdbc:" + dbType + "://" + dbHost + ":" + dbPort + "/" + dbName, dbUser, dbPass);
-      testDSL(database);
 
       DiscordClient.create(discordToken).login()
           .doOnNext(client -> registerCommands(client)
-              .thenMany(client.on(ChatInputInteractionEvent.class, Demo::handleCommand))
+              .thenMany(client.on(ChatInputInteractionEvent.class, Demo::handleChatCommand))
                 .subscribe())
           .flatMap(GatewayDiscordClient::onDisconnect)
           .block();
@@ -67,40 +67,6 @@ public class Demo
     }
   }
 
-  private static void testDSL(DSLContext dsl) throws DataAccessException
-  {
-    Random random = new Random();
-    LocalDate now = LocalDate.now();
-
-    boolean runExists = dsl.selectCount()
-        .from(RAIDBOT.RUN)
-        .where(RAIDBOT.RUN.DATE.eq(now))
-        .fetchOptional()
-        .map(Record1::component1)
-        .map(count -> count > 0)
-        .orElse(false);
-
-    if(!runExists)
-    {
-      Result<WingRecord> wings = dsl.selectFrom(RAIDBOT.WING)
-          .where(DSL.rand().le(BigDecimal.valueOf(0.5)))
-          .orderBy(DSL.rand().asc())
-          .fetch();
-
-      AtomicInteger ordinal = new AtomicInteger(0);
-      dsl.insertInto(RAIDBOT.RUN)
-          .set(wings.map(wing ->
-              new RunRecord(now, UInteger.valueOf(ordinal.getAndIncrement()), wing.getId())))
-          .execute();
-
-      var signups = SqlUtil.getSignups(dsl, now, DSL.rand().le(BigDecimal.valueOf(0.2)));
-      dsl.insertInto(RAIDBOT.SIGNUP)
-          .set(signups.map(signup ->
-              new SignupRecord(now, signup.get(RAIDBOT.ROLE.ID.as("roleId")), random.nextLong())))
-          .execute();
-    }
-  }
-
   private static List<ApplicationCommandRequest> buildCommands()
   {
     try
@@ -108,6 +74,8 @@ public class Demo
       List<ApplicationCommandRequest> commands = new LinkedList<>();
       ObjectMapper jacksonMapper = JacksonResources.create().getObjectMapper();
 
+      commands.add(jacksonMapper.readValue(getResourceFileAsString("commands/" + "add-wing" + ".json"),
+          ApplicationCommandRequest.class));
       commands.add(jacksonMapper.readValue(getResourceFileAsString("commands/" + "show-raid" + ".json"),
           ApplicationCommandRequest.class));
       commands.add(jacksonMapper.readValue(getResourceFileAsString("commands/" + "shutdown" + ".json"),
@@ -133,24 +101,34 @@ public class Demo
             .flatMap(command -> appService.createGlobalApplicationCommand(appId, command)));
   }
 
-  private static Mono<Void> handleCommand(ChatInputInteractionEvent event)
+  private static Mono<Void> handleChatCommand(ChatInputInteractionEvent event)
   {
     return switch(event.getCommandName())
     {
+      case "add-wing" -> handleAddWing(event);
       case "show-raid" -> handleShowRaid(event);
       case "shutdown" -> handleShutdown(event);
       default -> event.reply("Unknown command " + event.getCommandName()).withEphemeral(true);
     };
   }
 
+  private static Mono<Void> handleAddWing(ChatInputInteractionEvent event)
+  {
+    return getOptionFromCommand(event,"date", LocalDate.now())
+        .flatMap(date ->
+            getOptionFromCommand(event,"wing","NONE").map(wing ->
+                database.insertInto(RAIDBOT.RUN)
+                    .values(date, DSL.selectCount().from(RAIDBOT.RUN).where(RAIDBOT.RUN.DATE.eq(date)), wing)
+                    .onDuplicateKeyIgnore()
+                    .returning()
+                    .fetch()))
+        .map(insertedRows -> insertedRows.isEmpty() ? "Failure" : insertedRows.getFirst().toString())
+        .flatMap(event::reply);
+  }
+
   private static Mono<Void> handleShowRaid(ChatInputInteractionEvent event)
   {
-    return Mono.justOrEmpty(event.getOption("date")
-            .flatMap(ApplicationCommandInteractionOption::getValue))
-        .map(ApplicationCommandInteractionOptionValue::asString)
-        .map(LocalDate::parse)
-        .onErrorComplete()
-        .defaultIfEmpty(LocalDate.now())
+    return getOptionFromCommand(event,"date", LocalDate.now())
         .map(date -> SqlUtil.getSignups(database, date))
         .map(Result::toString)
         .flatMap(event::reply);
@@ -161,6 +139,30 @@ public class Demo
     return event.reply("Shutting down...")
         .withEphemeral(true)
         .then(event.getClient().logout());
+  }
+
+  private static <T> Mono<T> getOptionFromCommand(ChatInputInteractionEvent event, String optionName, T defaultValue)
+  {
+    return Mono.justOrEmpty(event.getOption(optionName)
+            .flatMap(ApplicationCommandInteractionOption::getValue))
+        .map(value -> parseCommandOption(value, defaultValue))
+        .onErrorComplete()
+        .defaultIfEmpty(defaultValue);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> T parseCommandOption(ApplicationCommandInteractionOptionValue value, T defaultValue)
+  {
+    return switch(defaultValue)
+    {
+      case LocalDate localDate -> (T) LocalDate.parse(value.asString());
+      case Long l -> (T) (Long) value.asLong();
+      case Double v -> (T) (Double) value.asDouble();
+      case Boolean b -> (T) (Boolean) value.asBoolean();
+      case String s -> (T) value.asString();
+      case Attachment attachment -> (T) value.asAttachment();
+      case null, default -> defaultValue;
+    };
   }
 
   private static String getResourceFileAsString(String fileName) throws IOException {

@@ -1,0 +1,19 @@
+{
+  "name": "add-wing",
+  "description": "Adds a wing to the raid schedule for a give day.",
+  "options": [
+    {
+      "name": "date",
+      "description": "Raid date",
+      "type": 3,
+      "required": false
+    },
+    {
+      "name": "wing",
+      "description": "Wing name",
+      "type": 3,
+      "required": true,
+      "choices": ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "EoD", "SotO", "VoE"]
+    }
+  ]
+}
