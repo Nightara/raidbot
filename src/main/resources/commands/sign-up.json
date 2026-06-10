@@ -1,0 +1,59 @@
+{
+  "name": "sign-up",
+  "description": "Signs up for a role on a registered raid.",
+  "options": [
+    {
+      "name": "role",
+      "description": "Role name",
+      "type": 3,
+      "required": true,
+      "choices": [
+        {"name": "Alac", "value": "Alac"},
+        {"name": "Quick", "value": "Quick"},
+        {"name": "Heal", "value": "Heal"},
+        {"name": "Cele", "value": "Cele"},
+        {"name": "Tank", "value": "Tank"},
+        {"name": "Kite", "value": "Kite"},
+        {"name": "Condi", "value": "Condi"},
+        {"name": "Herald", "value": "Herald"},
+        {"name": "Pylon", "value": "Pylon"},
+        {"name": "Lamp", "value": "Lamp"},
+        {"name": "Tower", "value": "Tower"},
+        {"name": "Ranged", "value": "Ranged"},
+        {"name": "Melee", "value": "Melee"},
+        {"name": "Handkite", "value": "Handkite"},
+        {"name": "Boonstrip", "value": "Boonstrip"}
+      ]
+    },
+    {
+      "name": "boss",
+      "description": "Boss name",
+      "type": 3,
+      "required": false
+    },
+    {
+      "name": "wing",
+      "description": "Wing name",
+      "type": 3,
+      "required": false,
+      "choices": [
+        {"name": "W1", "value": "W1"},
+        {"name": "W2", "value": "W2"},
+        {"name": "W3", "value": "W3"},
+        {"name": "W4", "value": "W4"},
+        {"name": "W5", "value": "W5"},
+        {"name": "W6", "value": "W6"},
+        {"name": "W7", "value": "W7"},
+        {"name": "W8", "value": "W8"},
+        {"name": "Strike CMs", "value": "EoD"},
+        {"name": "Kela NM", "value": "Kela"}
+      ]
+    },
+    {
+      "name": "date",
+      "description": "Raid date",
+      "type": 3,
+      "required": false
+    }
+  ]
+}

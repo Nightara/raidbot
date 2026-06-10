@@ -68,7 +68,7 @@ public class Role extends TableImpl<RoleRecord> {
     /**
      * The column <code>raidbot.role.boss</code>.
      */
-    public final TableField<RoleRecord, String> BOSS = createField(DSL.name("boss"), SQLDataType.VARCHAR(5).nullable(false), this, "");
+    public final TableField<RoleRecord, String> BOSS = createField(DSL.name("boss"), SQLDataType.VARCHAR(8).nullable(false), this, "");
 
     /**
      * The column <code>raidbot.role.name</code>.
@@ -154,7 +154,7 @@ public class Role extends TableImpl<RoleRecord> {
 
     @Override
     public List<ForeignKey<RoleRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.ROLE_BOSS_ID_FK);
+        return Arrays.asList(Keys.ROLE_BOSS_A_FK);
     }
 
     private transient BossPath _boss;
@@ -164,7 +164,7 @@ public class Role extends TableImpl<RoleRecord> {
      */
     public BossPath boss() {
         if (_boss == null)
-            _boss = new BossPath(this, Keys.ROLE_BOSS_ID_FK, null);
+            _boss = new BossPath(this, Keys.ROLE_BOSS_A_FK, null);
 
         return _boss;
     }

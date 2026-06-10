@@ -3,17 +3,28 @@
   "description": "Adds a wing to the raid schedule for a give day.",
   "options": [
     {
-      "name": "date",
-      "description": "Raid date",
-      "type": 3,
-      "required": false
-    },
-    {
       "name": "wing",
       "description": "Wing name",
       "type": 3,
       "required": true,
-      "choices": ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "EoD", "SotO", "VoE"]
+      "choices": [
+        {"name": "W1", "value": "W1"},
+        {"name": "W2", "value": "W2"},
+        {"name": "W3", "value": "W3"},
+        {"name": "W4", "value": "W4"},
+        {"name": "W5", "value": "W5"},
+        {"name": "W6", "value": "W6"},
+        {"name": "W7", "value": "W7"},
+        {"name": "W8", "value": "W8"},
+        {"name": "Strike CMs", "value": "EoD"},
+        {"name": "Kela NM", "value": "Kela"}
+      ]
+    },
+    {
+      "name": "date",
+      "description": "Raid date",
+      "type": 3,
+      "required": false
     }
   ]
 }

@@ -21,10 +21,10 @@ USE `raidbot`;
 
 -- Dumping structure for table raidbot.boss
 CREATE TABLE IF NOT EXISTS `boss` (
-  `id` varchar(5) NOT NULL,
+  `id` varchar(8) NOT NULL,
   `name` varchar(50) NOT NULL,
   `wing` varchar(5) DEFAULT NULL,
-  `after` varchar(5) DEFAULT NULL,
+  `after` varchar(8) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `boss_boss_id_fk` (`after`),
   KEY `boss_wing_id_fk` (`wing`),
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS `boss` (
 -- Dumping structure for table raidbot.role
 CREATE TABLE IF NOT EXISTS `role` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `boss` varchar(5) NOT NULL,
+  `boss` varchar(8) NOT NULL,
   `name` varchar(20) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `role_boss_id_fk` (`boss`),

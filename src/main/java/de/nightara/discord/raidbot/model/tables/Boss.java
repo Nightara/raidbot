@@ -62,7 +62,7 @@ public class Boss extends TableImpl<BossRecord> {
     /**
      * The column <code>raidbot.boss.id</code>.
      */
-    public final TableField<BossRecord, String> ID = createField(DSL.name("id"), SQLDataType.VARCHAR(5).nullable(false), this, "");
+    public final TableField<BossRecord, String> ID = createField(DSL.name("id"), SQLDataType.VARCHAR(8).nullable(false), this, "");
 
     /**
      * The column <code>raidbot.boss.name</code>.
@@ -77,7 +77,7 @@ public class Boss extends TableImpl<BossRecord> {
     /**
      * The column <code>raidbot.boss.after</code>.
      */
-    public final TableField<BossRecord, String> AFTER = createField(DSL.name("after"), SQLDataType.VARCHAR(5).defaultValue(DSL.field(DSL.raw("NULL"), SQLDataType.VARCHAR)), this, "");
+    public final TableField<BossRecord, String> AFTER = createField(DSL.name("after"), SQLDataType.VARCHAR(8).defaultValue(DSL.field(DSL.raw("NULL"), SQLDataType.VARCHAR)), this, "");
 
     private Boss(Name alias, Table<BossRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -153,7 +153,7 @@ public class Boss extends TableImpl<BossRecord> {
 
     @Override
     public List<ForeignKey<BossRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.BOSS_BOSS_ID_FK, Keys.BOSS_WING_ID_FK);
+        return Arrays.asList(Keys.BOSS_BOSS_AFTER_FK, Keys.BOSS_WING_ID_FK);
     }
 
     private transient BossPath _boss;
@@ -163,7 +163,7 @@ public class Boss extends TableImpl<BossRecord> {
      */
     public BossPath boss() {
         if (_boss == null)
-            _boss = new BossPath(this, Keys.BOSS_BOSS_ID_FK, null);
+            _boss = new BossPath(this, Keys.BOSS_BOSS_AFTER_FK, null);
 
         return _boss;
     }
@@ -187,7 +187,7 @@ public class Boss extends TableImpl<BossRecord> {
      */
     public RolePath role() {
         if (_role == null)
-            _role = new RolePath(this, null, Keys.ROLE_BOSS_ID_FK.getInverseKey());
+            _role = new RolePath(this, null, Keys.ROLE_BOSS_A_FK.getInverseKey());
 
         return _role;
     }

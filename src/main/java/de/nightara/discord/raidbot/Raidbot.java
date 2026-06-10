@@ -19,17 +19,16 @@ import reactor.core.publisher.*;
 
 import java.io.*;
 import java.io.IOException;
-import java.math.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.*;
 import java.util.*;
-import java.util.concurrent.atomic.*;
+import java.util.function.*;
 import java.util.stream.*;
 
 import static de.nightara.discord.raidbot.model.Raidbot.*;
 
-public class Demo
+public class Raidbot
 {
   private static DSLContext database;
 
@@ -52,7 +51,7 @@ public class Demo
 
       DiscordClient.create(discordToken).login()
           .doOnNext(client -> registerCommands(client)
-              .thenMany(client.on(ChatInputInteractionEvent.class, Demo::handleChatCommand))
+              .thenMany(client.on(ChatInputInteractionEvent.class, Raidbot::handleChatCommand))
                 .subscribe())
           .flatMap(GatewayDiscordClient::onDisconnect)
           .block();
@@ -79,6 +78,8 @@ public class Demo
       commands.add(jacksonMapper.readValue(getResourceFileAsString("commands/" + "show-raid" + ".json"),
           ApplicationCommandRequest.class));
       commands.add(jacksonMapper.readValue(getResourceFileAsString("commands/" + "shutdown" + ".json"),
+          ApplicationCommandRequest.class));
+      commands.add(jacksonMapper.readValue(getResourceFileAsString("commands/" + "sign-up" + ".json"),
           ApplicationCommandRequest.class));
 
       return commands;
@@ -108,6 +109,7 @@ public class Demo
       case "add-wing" -> handleAddWing(event);
       case "show-raid" -> handleShowRaid(event);
       case "shutdown" -> handleShutdown(event);
+      case "sign-up" -> handleSignUp(event);
       default -> event.reply("Unknown command " + event.getCommandName()).withEphemeral(true);
     };
   }
@@ -123,6 +125,37 @@ public class Demo
                     .returning()
                     .fetch()))
         .map(insertedRows -> insertedRows.isEmpty() ? "Failure" : insertedRows.getFirst().toString())
+        .flatMap(event::reply);
+  }
+
+  //TODO: Only sign up once per boss
+  private static Mono<Void> handleSignUp(ChatInputInteractionEvent event)
+  {
+    return getOptionFromCommand(event,"date", LocalDate.now())
+        .flatMap(date ->
+            getOptionFromCommand(event,"role","NONE").map(role ->
+            {
+              Condition condition = getOptionFromCommand(event,"wing","")
+                  .filter(Predicate.not(String::isEmpty))
+                  .map(RAIDBOT.WING.ID::eq)
+                  .or(getOptionFromCommand(event,"boss","NONE")
+                      .filter(Predicate.not(String::isEmpty))
+                      .map(RAIDBOT.BOSS.ID::eq))
+                  .blockOptional()
+                  .orElse(DSL.trueCondition());
+
+              Result<Record6<UInteger, String, String, UInteger, String, Long>> openRoles =
+                  SqlUtil.getSignups(database, date, RAIDBOT.ROLE.NAME.eq(role)
+                      .and(RAIDBOT.SIGNUP.PLAYER.isNull())
+                      .and(condition));
+
+              return database.insertInto(RAIDBOT.SIGNUP)
+                  .set(openRoles.map(openRole ->
+                      new SignupRecord(date, openRole.value4(), event.getUser().getId().asLong())))
+                  .returning()
+                  .fetch();
+            }))
+        .map(insertedRows -> insertedRows.isEmpty() ? "Failure" : "Signed up for " + insertedRows.size() + " bosses")
         .flatMap(event::reply);
   }
 
@@ -166,7 +199,7 @@ public class Demo
   }
 
   private static String getResourceFileAsString(String fileName) throws IOException {
-    ClassLoader classLoader = Demo.class.getClassLoader();
+    ClassLoader classLoader = Raidbot.class.getClassLoader();
     try (InputStream resourceAsStream = classLoader.getResourceAsStream(fileName)) {
       if (resourceAsStream == null) return null;
       try (InputStreamReader inputStreamReader = new InputStreamReader(resourceAsStream);
